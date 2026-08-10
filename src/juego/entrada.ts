@@ -7,6 +7,7 @@ export const entradaActual: Entrada = {
   derecha: false,
   joystickX: 0,
   joystickY: 0,
+  dash: false,
 };
 
 export function iniciarEntrada() {
@@ -16,6 +17,7 @@ export function iniciarEntrada() {
       case 's': case 'arrowdown': entradaActual.abajo = presionada; break;
       case 'a': case 'arrowleft': entradaActual.izquierda = presionada; break;
       case 'd': case 'arrowright': entradaActual.derecha = presionada; break;
+      case ' ': case 'shift': entradaActual.dash = presionada; break;
     }
   };
 

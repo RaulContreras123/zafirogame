@@ -20,6 +20,8 @@ export function actualizarEnemigos(tiempoActual: number, anchoPantalla: number, 
       dano: 2 + estadoJuego.jefesVencidos, // Hace más daño cada vez
       esJefe: true,
       ultimoAtaque: tiempoActual,
+      tipoGusano: estadoJuego.jefesVencidos,
+      colorHue: estadoJuego.jefesVencidos * 60,
     });
   }
 
@@ -44,6 +46,8 @@ export function actualizarEnemigos(tiempoActual: number, anchoPantalla: number, 
             vidaMaxima: CONFIGURACION.ENEMIGO_VIDA_BASE + estadoJuego.dificultad,
             velocidad: CONFIGURACION.ENEMIGO_VELOCIDAD_BASE + (estadoJuego.dificultad * 5),
             dano: 1,
+            tipoGusano: Math.floor(Math.random() * 3),
+            colorHue: Math.random() * 360,
           });
         } else {
           // Dispara bolas de fuego en círculo (patrón espectacular)
@@ -129,7 +133,9 @@ export function actualizarEnemigos(tiempoActual: number, anchoPantalla: number, 
       vida: CONFIGURACION.ENEMIGO_VIDA_BASE + vidaExtra,
       vidaMaxima: CONFIGURACION.ENEMIGO_VIDA_BASE + vidaExtra,
       velocidad: Math.min(CONFIGURACION.ENEMIGO_VELOCIDAD_BASE + velocidadExtra, estadoJuego.jugador.velocidad - 20), // Nunca más rápidos que el jugador
-      dano: 1
+      dano: 1,
+      tipoGusano: Math.floor(estadoJuego.nivel / 2) % 3,
+      colorHue: (estadoJuego.nivel * 30) % 360,
     });
 
     estadoJuego.ultimaActualizacionEnemigo = tiempoActual;

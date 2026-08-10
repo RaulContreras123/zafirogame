@@ -17,7 +17,7 @@ export function dibujarJuego(ctx: CanvasRenderingContext2D, estado: EstadoJuego,
   let offsetY = alto / 2 - estado.jugador.y;
   
   // Efecto de temblor de pantalla (Screen Shake) cuando nos pegan
-  if (tiempoActual < estado.jugador.invulnerableHasta) {
+  if (tiempoActual < estado.jugador.invulnerableHasta && tiempoActual > estado.jugador.enDashHasta) {
     const intensidadShake = (estado.jugador.invulnerableHasta - tiempoActual) / 1000 * 20; // 20px máx
     offsetX += (Math.random() - 0.5) * intensidadShake;
     offsetY += (Math.random() - 0.5) * intensidadShake;
@@ -68,43 +68,41 @@ export function dibujarJuego(ctx: CanvasRenderingContext2D, estado: EstadoJuego,
     const angulo = Math.atan2(estado.jugador.y - enemigo.y, estado.jugador.x - enemigo.x);
     const proporcionVida = enemigo.vida / enemigo.vidaMaxima;
     
-    // Tonos morados/rosados acordes al tema artístico, cambian con jefesVencidos
-    let tonoBaseR = 180 + (estado.jefesVencidos * 30) % 75;
-    let tonoBaseG = 50 + (estado.jefesVencidos * 40) % 150;
-    let r = tonoBaseR + 75 * proporcionVida;
-    let g = tonoBaseG + 50 * proporcionVida;
-    let b = 200 + 55 * proporcionVida - (estado.jefesVencidos * 20);
+    // Tonos morados/rosados acordes al tema artístico, cambian con colorHue y jefesVencidos
+    let colorHSL = `hsl(${enemigo.colorHue}, 70%, ${40 + 20 * proporcionVida}%)`;
+    let strokeColor = `hsl(${enemigo.colorHue}, 100%, 70%)`;
+    let alphaColor = (alpha: number) => `hsla(${enemigo.colorHue}, 70%, ${40 + 20 * proporcionVida}%, ${alpha})`;
     
     // Si es jefe, que sea más aterrador y cambie también
     if (enemigo.esJefe) {
-      r = 255;
-      g = (100 * proporcionVida) + (estado.jefesVencidos * 50) % 155;
-      b = 50 + (estado.jefesVencidos * 80) % 200;
+      colorHSL = `hsl(${enemigo.colorHue}, 90%, ${30 + 30 * proporcionVida}%)`;
+      strokeColor = `hsl(${enemigo.colorHue}, 100%, 60%)`;
+      alphaColor = (alpha: number) => `hsla(${enemigo.colorHue}, 90%, ${30 + 30 * proporcionVida}%, ${alpha})`;
     }
     
     // Dibujar segmentos del cuerpo (cola de gusano)
-    const numSegmentos = enemigo.esJefe ? 10 : 5;
+    const numSegmentos = enemigo.esJefe ? 10 : 5 + enemigo.tipoGusano;
     for (let i = numSegmentos; i > 0; i--) {
       // Cada segmento es más pequeño
       const radioSegmento = enemigo.radio * (1 - (i * (enemigo.esJefe ? 0.08 : 0.15)));
       // Cada segmento está más lejos hacia atrás
-      const distanciaCentro = i * (enemigo.radio * 0.85);
+      const distanciaCentro = i * (enemigo.radio * (0.85 - (enemigo.tipoGusano * 0.1)));
       
       const segX = enemigo.x - Math.cos(angulo) * distanciaCentro;
       const segY = enemigo.y - Math.sin(angulo) * distanciaCentro;
       
       // Movimiento ondulante de la cola
-      const ondulacion = Math.sin(tiempoActual / 150 - i) * (enemigo.radio * 0.4);
+      const ondulacion = Math.sin(tiempoActual / (150 - enemigo.tipoGusano * 20) - i) * (enemigo.radio * (0.4 + enemigo.tipoGusano * 0.1));
       const segXConOnda = segX + Math.cos(angulo + Math.PI / 2) * ondulacion;
       const segYConOnda = segY + Math.sin(angulo + Math.PI / 2) * ondulacion;
 
       ctx.beginPath();
       ctx.arc(segXConOnda, segYConOnda, Math.max(2, radioSegmento), 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${1 - (i * (enemigo.esJefe ? 0.05 : 0.1))})`;
+      ctx.fillStyle = alphaColor(1 - (i * (enemigo.esJefe ? 0.05 : 0.1)));
       ctx.fill();
       
       // Borde del segmento
-      ctx.strokeStyle = enemigo.esJefe ? 'rgba(255, 200, 100, 0.4)' : 'rgba(255, 255, 255, 0.2)';
+      ctx.strokeStyle = enemigo.esJefe ? strokeColor : 'rgba(255, 255, 255, 0.2)';
       ctx.lineWidth = enemigo.esJefe ? 2 : 1;
       ctx.stroke();
     }
@@ -112,9 +110,9 @@ export function dibujarJuego(ctx: CanvasRenderingContext2D, estado: EstadoJuego,
     // Cabeza (Cuerpo principal)
     ctx.beginPath();
     ctx.arc(enemigo.x, enemigo.y, enemigo.radio, 0, Math.PI * 2);
-    ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+    ctx.fillStyle = colorHSL;
     ctx.fill();
-    ctx.strokeStyle = enemigo.esJefe ? 'rgba(255, 200, 100, 0.8)' : 'rgba(255, 255, 255, 0.4)';
+    ctx.strokeStyle = enemigo.esJefe ? strokeColor : 'rgba(255, 255, 255, 0.4)';
     ctx.lineWidth = enemigo.esJefe ? 3 : 1.5;
     ctx.stroke();
     
@@ -174,26 +172,48 @@ export function dibujarJuego(ctx: CanvasRenderingContext2D, estado: EstadoJuego,
 
   // 5. Dibujar Proyectiles (Cristales mágicos)
   for (const proyectil of estado.proyectiles) {
+    ctx.save();
+    ctx.translate(proyectil.x, proyectil.y);
+    const ang = Math.atan2(proyectil.velocidadY, proyectil.velocidadX) + Math.PI / 2;
+    ctx.rotate(ang);
     ctx.beginPath();
-    ctx.arc(proyectil.x, proyectil.y, proyectil.radio, 0, Math.PI * 2);
+    ctx.moveTo(0, -proyectil.radio * 1.5);
+    ctx.lineTo(proyectil.radio, 0);
+    ctx.lineTo(0, proyectil.radio * 1.5);
+    ctx.lineTo(-proyectil.radio, 0);
+    ctx.closePath();
     ctx.fillStyle = '#e6ccff';
-    ctx.fill();
     ctx.shadowBlur = 15;
-    ctx.shadowColor = '#dca3ff';
+    ctx.shadowColor = '#00ffff';
     ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
     ctx.shadowBlur = 0;
+    ctx.restore();
   }
 
   // 5.5. Dibujar Proyectiles Enemigos
   for (const proyectil of estado.proyectilesEnemigos) {
+    ctx.save();
+    ctx.translate(proyectil.x, proyectil.y);
+    const ang = Math.atan2(proyectil.velocidadY, proyectil.velocidadX) + Math.PI / 2;
+    ctx.rotate(ang);
     ctx.beginPath();
-    ctx.arc(proyectil.x, proyectil.y, proyectil.radio, 0, Math.PI * 2);
+    ctx.moveTo(0, -proyectil.radio * 1.5);
+    ctx.lineTo(proyectil.radio, 0);
+    ctx.lineTo(0, proyectil.radio * 1.5);
+    ctx.lineTo(-proyectil.radio, 0);
+    ctx.closePath();
     ctx.fillStyle = '#ff6b6b'; // Rojo coral
-    ctx.fill();
     ctx.shadowBlur = 15;
     ctx.shadowColor = '#ff0000';
     ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
     ctx.shadowBlur = 0;
+    ctx.restore();
   }
 
   // 6. Dibujar Textos Flotantes (Daño saltando)

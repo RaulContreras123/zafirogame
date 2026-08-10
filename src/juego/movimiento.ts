@@ -2,7 +2,11 @@ import { estadoJuego } from './estado';
 import { entradaActual } from './entrada';
 import { distancia } from './utilidades';
 
-export function actualizarMovimiento(deltaSegundos: number, anchoPantalla: number, altoPantalla: number) {
+import { CONFIGURACION } from './config';
+import { sonidos } from '../audio/sonidos';
+import { estadisticasJuego } from './logros';
+
+export function actualizarMovimiento(deltaSegundos: number, anchoPantalla: number, altoPantalla: number, tiempoActual: number) {
   // 1. Mover Jugador
   let dx = 0;
   let dy = 0;
@@ -25,8 +29,27 @@ export function actualizarMovimiento(deltaSegundos: number, anchoPantalla: numbe
     dy /= longitud;
   }
 
-  estadoJuego.jugador.x += dx * estadoJuego.jugador.velocidad * deltaSegundos;
-  estadoJuego.jugador.y += dy * estadoJuego.jugador.velocidad * deltaSegundos;
+  // Dash
+  if (entradaActual.dash && tiempoActual > estadoJuego.jugador.ultimoDash + CONFIGURACION.JUGADOR_DASH_COOLDOWN && (dx !== 0 || dy !== 0)) {
+    estadoJuego.jugador.ultimoDash = tiempoActual;
+    estadoJuego.jugador.enDashHasta = tiempoActual + CONFIGURACION.JUGADOR_DASH_DURACION;
+    estadoJuego.jugador.dashDirX = dx;
+    estadoJuego.jugador.dashDirY = dy;
+    sonidos.dash();
+    estadisticasJuego.dashesRealizados++;
+    // Dar invulnerabilidad por la duración del dash
+    estadoJuego.jugador.invulnerableHasta = Math.max(estadoJuego.jugador.invulnerableHasta, estadoJuego.jugador.enDashHasta);
+  }
+
+  if (tiempoActual < estadoJuego.jugador.enDashHasta) {
+    // Estamos en dash
+    estadoJuego.jugador.x += estadoJuego.jugador.dashDirX * CONFIGURACION.JUGADOR_DASH_VELOCIDAD * deltaSegundos;
+    estadoJuego.jugador.y += estadoJuego.jugador.dashDirY * CONFIGURACION.JUGADOR_DASH_VELOCIDAD * deltaSegundos;
+  } else {
+    // Caminar normal
+    estadoJuego.jugador.x += dx * estadoJuego.jugador.velocidad * deltaSegundos;
+    estadoJuego.jugador.y += dy * estadoJuego.jugador.velocidad * deltaSegundos;
+  }
 
   // El jugador ahora se puede mover libremente, la cámara lo seguirá.
 

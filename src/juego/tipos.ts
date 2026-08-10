@@ -7,6 +7,10 @@ export type Jugador = Entidad & {
   velocidad: number;
   radioRecogida: number;
   invulnerableHasta: number;
+  ultimoDash: number;
+  enDashHasta: number;
+  dashDirX: number;
+  dashDirY: number;
 };
 
 export type Enemigo = Entidad & {
@@ -16,6 +20,8 @@ export type Enemigo = Entidad & {
   dano: number;
   esJefe?: boolean;
   ultimoAtaque?: number;
+  tipoGusano: number; // Para variar la forma
+  colorHue: number; // Para variar el color
 };
 
 export type Proyectil = Entidad & {
@@ -74,6 +80,7 @@ export type Entrada = {
   derecha: boolean;
   joystickX: number; // -1 a 1
   joystickY: number; // -1 a 1
+  dash: boolean;
 };
 
 export type Mejora = {

@@ -1,11 +1,19 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { entradaActual } from '../juego/entrada';
 
 export function ControlesTactiles() {
   const joystickRef = useRef<HTMLDivElement>(null);
   const perillaRef = useRef<HTMLDivElement>(null);
+  const [esTactil, setEsTactil] = useState(false);
   
   useEffect(() => {
+    // Detectar si el dispositivo es táctil
+    const checkTactil = () => {
+      setEsTactil(window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window);
+    };
+    checkTactil();
+    window.addEventListener('resize', checkTactil);
+
     const joystick = joystickRef.current;
     const perilla = perillaRef.current;
     if (!joystick || !perilla) return;
@@ -63,6 +71,7 @@ export function ControlesTactiles() {
     joystick.addEventListener('touchcancel', manejarFin, { passive: false });
 
     return () => {
+      window.removeEventListener('resize', checkTactil);
       joystick.removeEventListener('touchstart', manejarInicio);
       joystick.removeEventListener('touchmove', manejarMovimiento);
       joystick.removeEventListener('touchend', manejarFin);
@@ -70,20 +79,47 @@ export function ControlesTactiles() {
     };
   }, []);
 
+  const handleDashStart = (e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
+    entradaActual.dash = true;
+  };
+
+  const handleDashEnd = (e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
+    entradaActual.dash = false;
+  };
+
+  if (!esTactil) return null;
+
   return (
-    <div className="absolute bottom-12 left-12 sm:hidden z-20 opacity-60">
-      {/* Fondo del Joystick */}
-      <div 
-        ref={joystickRef}
-        className="w-32 h-32 bg-white/10 rounded-full border border-white/20 flex items-center justify-center backdrop-blur-sm"
-      >
-        {/* Botón que se mueve */}
+    <>
+      {/* Controles de Joystick (Izquierda) */}
+      <div className="absolute bottom-12 left-12 z-20 opacity-60">
         <div 
-          ref={perillaRef}
-          className="w-14 h-14 bg-white/50 rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] pointer-events-none"
-          style={{ transition: 'none' }}
-        />
+          ref={joystickRef}
+          className="w-32 h-32 bg-white/10 rounded-full border border-white/20 flex items-center justify-center backdrop-blur-sm"
+        >
+          <div 
+            ref={perillaRef}
+            className="w-14 h-14 bg-white/50 rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] pointer-events-none"
+            style={{ transition: 'none' }}
+          />
+        </div>
       </div>
-    </div>
+
+      {/* Botón de Dash (Derecha) */}
+      <div className="absolute bottom-16 right-12 z-20 opacity-70">
+        <button
+          onTouchStart={handleDashStart}
+          onTouchEnd={handleDashEnd}
+          onMouseDown={handleDashStart}
+          onMouseUp={handleDashEnd}
+          onMouseLeave={handleDashEnd}
+          className="w-20 h-20 bg-cyan-500/20 rounded-full border border-cyan-400/50 flex items-center justify-center backdrop-blur-sm active:bg-cyan-500/40 active:scale-95 transition-all"
+        >
+          <div className="text-cyan-200 text-xs font-bold uppercase tracking-widest">Dash</div>
+        </button>
+      </div>
+    </>
   );
 }

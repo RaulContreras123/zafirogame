@@ -5,6 +5,7 @@ import { actualizarEnemigos } from './enemigos';
 import { actualizarColisiones } from './colisiones';
 import { dibujarJuego } from './dibujo';
 import { CONFIGURACION } from './config';
+import { comprobarLogrosTracker } from './logros';
 
 let idAnimacion = 0;
 let tiempoAnterior = performance.now();
@@ -61,10 +62,11 @@ export function iniciarBucle(ctx: CanvasRenderingContext2D, alActualizarReact: (
     while (acumulador >= TIEMPO_PASO_FIJO_MS) {
       const deltaSegundos = TIEMPO_PASO_FIJO_MS / 1000;
       
-      actualizarMovimiento(deltaSegundos, ctx.canvas.width, ctx.canvas.height);
+      actualizarMovimiento(deltaSegundos, ctx.canvas.width, ctx.canvas.height, tiempoActual);
       actualizarEnemigos(tiempoActual, ctx.canvas.width, ctx.canvas.height);
       actualizarArma(tiempoActual);
       actualizarColisiones(tiempoActual);
+      comprobarLogrosTracker();
       
       acumulador -= TIEMPO_PASO_FIJO_MS;
     }

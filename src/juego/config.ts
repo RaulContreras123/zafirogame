@@ -5,6 +5,9 @@ export const CONFIGURACION = {
   JUGADOR_RADIO: 15, // Tamaño del jugador
   JUGADOR_RADIO_RECOGIDA_INICIAL: 60, // Desde qué distancia atrae las gemas
   JUGADOR_TIEMPO_INVULNERABLE: 1000, // Milisegundos que no recibe daño tras un golpe
+  JUGADOR_DASH_DURACION: 200, // milisegundos que dura el dash
+  JUGADOR_DASH_COOLDOWN: 1500, // milisegundos entre dashes
+  JUGADOR_DASH_VELOCIDAD: 600, // velocidad del dash
 
   // Arma inicial (Poderes de cristal)
   ARMA_DANO_INICIAL: 1, // Cuánto daño hace cada cristal

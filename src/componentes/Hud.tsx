@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { estadoJuego } from '../juego/estado';
+import { CONFIGURACION } from '../juego/config';
+import { obtenerLogrosRecientes } from '../juego/logros';
+import { Trophy } from 'lucide-react';
 
 // Recibe `actualizador` solo para forzar que React lo dibuje cuando el bucle lo pida
 export function Hud({ actualizador }: { actualizador: number }) {
@@ -12,10 +15,22 @@ export function Hud({ actualizador }: { actualizador: number }) {
   const segundos = Math.floor(tiempoSobrevivido % 60);
   const tiempoTexto = `${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
 
+  // Calcular cooldown del dash
+  const [tiempoActualRender, setTiempoActualRender] = useState(performance.now());
+  useEffect(() => {
+    setTiempoActualRender(performance.now());
+  }, [actualizador]);
+  
+  const tiempoDesdeUltimoDash = tiempoActualRender - jugador.ultimoDash;
+  const porcentajeDash = Math.min(100, (tiempoDesdeUltimoDash / CONFIGURACION.JUGADOR_DASH_COOLDOWN) * 100);
+
+  const logros = obtenerLogrosRecientes();
+
   return (
-    <header className="absolute top-0 left-0 w-full z-10 p-8 flex justify-between items-start pointer-events-none">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-4">
+    <>
+      <header className="absolute top-0 left-0 w-full z-10 p-8 flex justify-between items-start pointer-events-none">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-4">
           <div className="flex gap-2 ml-1">
             {Array.from({ length: jugador.vidaMaxima }).map((_, i) => (
               <div
@@ -41,6 +56,15 @@ export function Hud({ actualizador }: { actualizador: number }) {
         <span className="text-[10px] uppercase tracking-wider text-cyan-400 drop-shadow-md">
           Experiencia Cristalina: Nivel {nivel}
         </span>
+        <div className="w-48 sm:w-64 h-1.5 bg-slate-800/50 rounded-full mt-1 overflow-hidden">
+          <div
+            className={`h-full transition-all duration-100 ${porcentajeDash >= 100 ? 'bg-white shadow-[0_0_5px_#fff]' : 'bg-white/30'}`}
+            style={{ width: `${porcentajeDash}%` }}
+          />
+        </div>
+        <span className="text-[8px] uppercase tracking-widest text-white/60">
+          DASH {porcentajeDash >= 100 ? '(LISTO)' : ''}
+        </span>
       </div>
 
       <div className="text-right drop-shadow-md">
@@ -52,5 +76,19 @@ export function Hud({ actualizador }: { actualizador: number }) {
         </div>
       </div>
     </header>
+
+    {/* Notificaciones de Logros */}
+    <div className="absolute top-32 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none z-50">
+      {logros.map(logro => (
+        <div key={logro.id} className="animate-in fade-in slide-in-from-top-10 duration-500 bg-yellow-500/90 text-black px-6 py-3 rounded-full flex items-center gap-4 shadow-[0_0_20px_rgba(234,179,8,0.5)] border-2 border-yellow-300">
+          <Trophy size={24} className="text-yellow-900" />
+          <div>
+            <div className="text-[10px] uppercase tracking-widest font-bold opacity-80">¡Logro Desbloqueado!</div>
+            <div className="text-sm font-black">{logro.titulo}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+    </>
   );
 }

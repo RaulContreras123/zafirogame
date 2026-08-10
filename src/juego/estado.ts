@@ -13,6 +13,10 @@ export function crearEstadoInicial(): EstadoJuego {
       velocidad: CONFIGURACION.JUGADOR_VELOCIDAD_INICIAL,
       radioRecogida: CONFIGURACION.JUGADOR_RADIO_RECOGIDA_INICIAL,
       invulnerableHasta: 0,
+      ultimoDash: 0,
+      enDashHasta: 0,
+      dashDirX: 0,
+      dashDirY: 0,
     },
     arma: {
       dano: CONFIGURACION.ARMA_DANO_INICIAL,

@@ -8,6 +8,7 @@ import { ControlesTactiles } from './ControlesTactiles';
 import { obtenerMejorasAleatorias } from '../juego/mejoras';
 import { Mejora } from '../juego/tipos';
 import { Trophy, Skull } from 'lucide-react';
+import { reiniciarEstadisticas } from '../juego/logros';
 
 export function LienzoJuego() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -85,6 +86,7 @@ export function LienzoJuego() {
 
   const reintentar = () => {
     reiniciarEstado();
+    reiniciarEstadisticas();
     // Volver a acomodar al jugador
     if (canvasRef.current) {
         estadoJuego.jugador.x = canvasRef.current.width / 2;

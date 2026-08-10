@@ -1,6 +1,7 @@
 import { estadoJuego } from './estado';
 import { distancia, idUnico } from './utilidades';
 import { CONFIGURACION } from './config';
+import { sonidos } from '../audio/sonidos';
 
 export function actualizarArma(tiempoActual: number) {
   const { arma, jugador, enemigos } = estadoJuego;
@@ -49,6 +50,7 @@ export function actualizarArma(tiempoActual: number) {
       });
     }
 
+    sonidos.disparo();
     estadoJuego.ultimaActualizacionDisparo = tiempoActual;
   }
 }

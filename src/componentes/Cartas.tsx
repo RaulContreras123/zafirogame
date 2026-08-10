@@ -1,6 +1,7 @@
 import React from 'react';
 import { Mejora } from '../juego/tipos';
 import { elegirMejora } from '../juego/mejoras';
+import { sonidos } from '../audio/sonidos';
 
 type Props = {
   mejoras: Mejora[];
@@ -9,6 +10,7 @@ type Props = {
 
 export function Cartas({ mejoras, alElegir }: Props) {
   const seleccionar = (id: string) => {
+    sonidos.recogerGema(); // Tono de confirmar
     elegirMejora(id); // Aplica el cambio y despausa el estado global
     alElegir(); // Le avisa al Lienzo que oculte las cartas
   };

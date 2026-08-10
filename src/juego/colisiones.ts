@@ -1,5 +1,7 @@
 import { estadoJuego } from './estado';
 import { distancia, idUnico } from './utilidades';
+import { sonidos } from '../audio/sonidos';
+import { estadisticasJuego } from './logros';
 
 export function actualizarColisiones(tiempoActual: number) {
   const { jugador, enemigos, proyectiles, gemas } = estadoJuego;
@@ -17,6 +19,7 @@ export function actualizarColisiones(tiempoActual: number) {
         enemigo.vida -= proyectil.dano;
         proyectil.atraviesa -= 1;
         proyectil.enemigosGolpeados.push(enemigo.id);
+        sonidos.hit();
 
         // Crear el número flotante de daño
         estadoJuego.textosDano.push({
@@ -39,9 +42,11 @@ export function actualizarColisiones(tiempoActual: number) {
       if (distancia(jugador.x, jugador.y, enemigo.x, enemigo.y) < jugador.radio + enemigo.radio) {
         jugador.vida -= enemigo.dano;
         jugador.invulnerableHasta = tiempoActual + 1000; // 1 segundo completo de invulnerabilidad
+        sonidos.hit();
         
         if (jugador.vida <= 0) {
           estadoJuego.estado = 'fin_juego';
+          sonidos.gameOver();
         }
         break; // Solo recibe daño de un monstruo a la vez para ser justos
       }
@@ -57,9 +62,11 @@ export function actualizarColisiones(tiempoActual: number) {
         jugador.vida -= proyectil.dano;
         proyectil.tiempoVida = 0; // Se destruye al impactar
         jugador.invulnerableHasta = tiempoActual + 1000;
+        sonidos.hit();
         
         if (jugador.vida <= 0) {
           estadoJuego.estado = 'fin_juego';
+          sonidos.gameOver();
         }
         break;
       }
@@ -71,9 +78,11 @@ export function actualizarColisiones(tiempoActual: number) {
     if (gema.valor > 0 && distancia(jugador.x, jugador.y, gema.x, gema.y) < jugador.radio + gema.radio) {
       gema.valor = 0; // Marcar como recogida para borrarla
       estadoJuego.experiencia += 1;
+      sonidos.recogerGema();
       
       if (estadoJuego.experiencia >= estadoJuego.experienciaNecesaria) {
         estadoJuego.estado = 'subiendo_nivel';
+        sonidos.subirNivel();
       }
     }
   }
@@ -87,6 +96,7 @@ export function actualizarColisiones(tiempoActual: number) {
       enemigosVivos.push(enemigo);
     } else {
       // Enemigo muere: Suelta una gema justo donde cayó
+      estadisticasJuego.enemigosDerrotados++;
       if (enemigo.esJefe) {
         estadoJuego.jefesVencidos++;
         // Jefe suelta una explosión de gemas
