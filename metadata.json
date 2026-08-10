@@ -1,0 +1,6 @@
+{
+  "name": "Sobrevivir (Semilla)",
+  "description": "Una plantilla de enseñanza de un juego de sobrevivir con vista superior para talleres de programación. Aprende a modificar el arma, enemigos, mejoras y estilo cambiando variables sencillas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
