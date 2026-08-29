@@ -1,5 +1,27 @@
 import { sonidos } from '../audio/sonidos';
 import { estadoJuego } from './estado';
+// @ts-ignore  — el kit es JS compartido y vendorizado; allowJs lo permite.
+import { mountLogbook, ES } from '../../vendor/arcade-kit/logbook.js';
+import { ESTAMPAS, migrarLogrosViejos } from './estampas';
+
+/* El álbum de estampas, compartido con los demás juegos del arcade.
+ *
+ * NO reemplaza a los logros de aquí arriba: los cinco originales siguen siendo
+ * los mismos, con sus ids, y `migrarLogrosViejos` importa lo que el jugador ya
+ * tenía desbloqueado. Lo que añade es la página de papel y la cuenta, para que
+ * las estampas viajen entre dispositivos.
+ *
+ * La API vive en raulcontrerasherrera.com y este juego se sirve desde
+ * gatoarcade.com, así que la llamada es entre dominios — funciona porque la
+ * cuenta compartida ahora permite este origen explícitamente. */
+export const album = mountLogbook({
+  game: 'monstruos',
+  title: 'ÁLBUM',
+  stickers: ESTAMPAS,
+  strings: ES,
+  api: 'https://raulcontrerasherrera.com/api',
+  migrate: migrarLogrosViejos,
+});
 
 export type Logro = {
   id: string;
@@ -80,4 +102,14 @@ export function comprobarLogrosTracker() {
   if (estadisticasJuego.dashesRealizados >= 50) desbloquearLogro('DASH_PERFECTO');
   if (estadoJuego.jefesVencidos >= 1) desbloquearLogro('PRIMER_JEFE');
   if (estadoJuego.tiempoSobrevivido >= 300) desbloquearLogro('SOBREVIVE_5'); // 300 segundos = 5 min
+
+  /* El álbum se entera desde el mismo sitio que los logros, con los números en
+     crudo. Así una estampa nunca puede contradecir lo que el juego acaba de
+     decirle al jugador, y las estampas nuevas (500 enemigos, 10 minutos,
+     nivel 20) no necesitan otro sitio donde contar lo mismo otra vez. */
+  album.report({ type: 'enemigo', total: estadisticasJuego.enemigosDerrotados });
+  album.report({ type: 'dash', total: estadisticasJuego.dashesRealizados });
+  album.report({ type: 'nivel', nivel: estadoJuego.nivel });
+  album.report({ type: 'tiempo', minutos: estadoJuego.tiempoSobrevivido / 60 });
+  if (estadoJuego.jefesVencidos >= 1) album.report({ type: 'jefe' });
 }

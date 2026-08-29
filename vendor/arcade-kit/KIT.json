@@ -1,0 +1,15 @@
+{
+  "vendoredFrom": "G:\\Dev\\active\\games\\_arcade-kit",
+  "files": [
+    "audio.js",
+    "loader.js",
+    "logbook.js",
+    "motion.js",
+    "rng.js",
+    "skinned.js",
+    "store.js",
+    "tween.js",
+    "widgets.js"
+  ],
+  "note": "Regenerate with _arcade-kit/bin/vendor-into.mjs"
+}
