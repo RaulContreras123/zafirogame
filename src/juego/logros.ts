@@ -21,6 +21,15 @@ export const album = mountLogbook({
   strings: ES,
   api: 'https://raulcontrerasherrera.com/api',
   migrate: migrarLogrosViejos,
+  /* SIN inicio de sesión, a propósito.
+     gatoarcade.com es un arcade para niños — los juegos los hicieron ellos en
+     el taller. Ofrecer un login de Google aquí significa pedirle a un menor su
+     identificador, su correo y su nombre, que es exactamente lo que COPPA y el
+     RGPD-K existen para evitar, y ningún texto legal convierte eso en una
+     buena idea por defecto. Las estampas funcionan igual: se guardan en el
+     dispositivo. Lo único que se pierde es llevarlas a otro aparato, y a
+     cambio no se recoge absolutamente nada. */
+  allowSignIn: false,
 });
 
 export type Logro = {

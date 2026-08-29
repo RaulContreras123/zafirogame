@@ -59,11 +59,15 @@ export function mergeProgress(a = {}, b = {}) {
 }
 
 export class Arcade {
-  /** @param {{game:string, api?:string, storageKey?:string}} opts */
+  /** @param {{game:string, api?:string, storageKey?:string, allowSignIn?:boolean}} opts */
   constructor(opts) {
     if (!opts?.game) throw new Error('Arcade needs a game id');
     this.game = opts.game;
     this.api = opts.api ?? DEFAULT_API;
+    /* Some games must never invite a sign-in — see mountLogbook. When false the
+       account is not contacted at all, so nothing about the player reaches a
+       server and the page says plainly that saving is local. */
+    this.allowSignIn = opts.allowSignIn !== false;
     this.key = opts.storageKey ?? `${opts.game}Progress`;
 
     this.me = { signedIn: false };
@@ -82,6 +86,7 @@ export class Arcade {
   /* Tolerant by design: a failure here means "play offline", never an error the
      player has to read. */
   async init() {
+    if (!this.allowSignIn) { this.online = false; this.emit(); return this; }
     try {
       const res = await fetch(`${this.api}/me`, { credentials: 'include' });
       if (res.ok) { this.me = await res.json(); this.online = true; }
@@ -374,13 +379,27 @@ export function injectLogbookStyles(doc = document) {
 /* Defaults on every optional argument, not just for tidiness: a TypeScript
    caller infers a destructured parameter without a default as REQUIRED, so
    omitting `onToast` was a type error in the one game that is written in TS. */
+/**
+ * `allowSignIn: false` turns the whole account off for one game.
+ *
+ * It exists for the games aimed at children. Offering a Google sign-in on a
+ * site aimed at under-13s means collecting an identifier, an email and a name
+ * from a child, which is the thing COPPA and GDPR-K are about, and no amount of
+ * policy text makes that the right default for a kids' arcade. The stickers
+ * still work — localStorage is the primary store anyway — so a child loses
+ * nothing except carrying them to another device, and the site collects
+ * nothing at all.
+ *
+ * Turn it on only for a game whose audience is adults.
+ */
 export function mountLogbook({
   game, stickers,
   title = 'LOGBOOK', api = undefined, onToast = null, strings = null, migrate = null,
+  allowSignIn = true,
 }) {
   injectLogbookStyles();
 
-  const arcade = new Arcade({ game, api });
+  const arcade = new Arcade({ game, api, allowSignIn });
 
   const page = document.createElement('div');
   page.className = 'arcade-logbook';
